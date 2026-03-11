@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
   useEdgeBoxDrag,
   useEdgeBoxPosition,
@@ -74,30 +74,25 @@ export function AutoFocusSnapBox() {
     autoFocusSensitivity: 8,
   });
 
-  const currentOffset = useMemo(
-    () => ({
-      x: dragOffset.x + (isResizing ? resizeOffset.x : 0),
-      y: dragOffset.y + (isResizing ? resizeOffset.y : 0),
-    }),
-    [dragOffset.x, dragOffset.y, isResizing, resizeOffset.x, resizeOffset.y]
-  );
+  const currentOffset = {
+    x: dragOffset.x + (isResizing ? resizeOffset.x : 0),
+    y: dragOffset.y + (isResizing ? resizeOffset.y : 0),
+  };
 
-  const style = useMemo((): React.CSSProperties => {
-    return {
-      position: "fixed",
-      left: edges.left,
-      top: edges.top,
-      width: dimensions.width,
-      height: dimensions.height,
-      transform: `translate3d(${currentOffset.x}px, ${currentOffset.y}px, 0)`,
-      background: "rgba(255,255,255,0.07)",
-      border: "1px solid rgba(255,255,255,0.18)",
-      borderRadius: 16,
-      padding: 12,
-      touchAction: "none",
-      cursor: isDragging ? "grabbing" : "grab",
-    };
-  }, [currentOffset.x, currentOffset.y, dimensions.height, dimensions.width, edges.left, edges.top, isDragging]);
+  const style: React.CSSProperties = {
+    position: "fixed",
+    left: edges.left,
+    top: edges.top,
+    width: dimensions.width,
+    height: dimensions.height,
+    transform: `translate3d(${currentOffset.x}px, ${currentOffset.y}px, 0)`,
+    background: "rgba(255,255,255,0.07)",
+    border: "1px solid rgba(255,255,255,0.18)",
+    borderRadius: 16,
+    padding: 12,
+    touchAction: "none",
+    cursor: isDragging ? "grabbing" : "grab",
+  };
 
   return (
     <div>

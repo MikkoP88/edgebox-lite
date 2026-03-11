@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { DraggableStickyNote } from "./examples/DraggableStickyNote";
 import { ResizableToolPalette } from "./examples/ResizableToolPalette";
 import { DragResizeWindow } from "./examples/DragResizeWindow";
@@ -15,20 +15,20 @@ type ExampleId =
 export function App() {
   const [example, setExample] = useState<ExampleId>("drag-resize");
 
-  const ExampleComponent = useMemo(() => {
+  const exampleElement = (() => {
     switch (example) {
       case "draggable":
-        return DraggableStickyNote;
+        return <DraggableStickyNote />;
       case "resizable":
-        return ResizableToolPalette;
+        return <ResizableToolPalette />;
       case "drag-resize":
-        return DragResizeWindow;
+        return <DragResizeWindow />;
       case "auto-size-clamp":
-        return AutoSizedQuickMenu;
+        return <AutoSizedQuickMenu />;
       case "autofocus":
-        return AutoFocusSnapBox;
+        return <AutoFocusSnapBox />;
     }
-  }, [example]);
+  })();
 
   return (
     <div className="container">
@@ -53,7 +53,7 @@ export function App() {
         </p>
       </div>
 
-      <ExampleComponent />
+      {exampleElement}
     </div>
   );
 }

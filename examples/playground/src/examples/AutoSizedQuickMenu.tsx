@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   useEdgeBoxDrag,
   useEdgeBoxPosition,
@@ -19,8 +19,8 @@ export function AutoSizedQuickMenu() {
 
   // When closed, we leave width/height as `undefined` (auto-size).
   // When opened, we provide explicit dimensions so clamping math is stable.
-  const numericWidth = useMemo(() => (open ? 320 : undefined), [open]);
-  const numericHeight = useMemo(() => (open ? 260 : undefined), [open]);
+  const numericWidth = open ? 320 : undefined;
+  const numericHeight = open ? 260 : undefined;
 
   const { edges, updateEdges } = useEdgeBoxPosition({
     position: "top-right",
@@ -48,22 +48,20 @@ export function AutoSizedQuickMenu() {
     deps: [open],
   });
 
-  const style = useMemo((): React.CSSProperties => {
-    return {
-      position: "fixed",
-      left: edges.left,
-      top: edges.top,
-      transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)`,
-      background: "rgba(255,255,255,0.06)",
-      border: "1px solid rgba(255,255,255,0.16)",
-      borderRadius: 16,
-      padding: 12,
-      width: open ? 320 : "auto",
-      userSelect: "none",
-      touchAction: "none",
-      boxShadow: "0 16px 50px rgba(0,0,0,0.45)",
-    };
-  }, [dragOffset.x, dragOffset.y, edges.left, edges.top, open]);
+  const style: React.CSSProperties = {
+    position: "fixed",
+    left: edges.left,
+    top: edges.top,
+    transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)`,
+    background: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.16)",
+    borderRadius: 16,
+    padding: 12,
+    width: open ? 320 : "auto",
+    userSelect: "none",
+    touchAction: "none",
+    boxShadow: "0 16px 50px rgba(0,0,0,0.45)",
+  };
 
   return (
     <div

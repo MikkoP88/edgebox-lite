@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import {
   useEdgeBoxPosition,
   useEdgeBoxResize,
@@ -63,22 +63,20 @@ export function ResizableToolPalette() {
     safeZone,
   });
 
-  const style = useMemo((): React.CSSProperties => {
-    return {
-      position: "fixed",
-      left: edges.left,
-      top: edges.top,
-      width: dimensions.width,
-      height: dimensions.height,
-      transform: `translate3d(${resizeOffset.x}px, ${resizeOffset.y}px, 0)`,
-      background: "rgba(255,255,255,0.08)",
-      border: "1px solid rgba(255,255,255,0.18)",
-      borderRadius: 16,
-      padding: 14,
-      boxShadow: isResizing ? "0 22px 70px rgba(0,0,0,0.55)" : "0 14px 40px rgba(0,0,0,0.35)",
-      touchAction: "none",
-    };
-  }, [dimensions.height, dimensions.width, edges.left, edges.top, isResizing, resizeOffset.x, resizeOffset.y]);
+  const style: React.CSSProperties = {
+    position: "fixed",
+    left: edges.left,
+    top: edges.top,
+    width: dimensions.width,
+    height: dimensions.height,
+    transform: `translate3d(${resizeOffset.x}px, ${resizeOffset.y}px, 0)`,
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.18)",
+    borderRadius: 16,
+    padding: 14,
+    boxShadow: isResizing ? "0 22px 70px rgba(0,0,0,0.55)" : "0 14px 40px rgba(0,0,0,0.35)",
+    touchAction: "none",
+  };
 
   return (
     <div style={style}>

@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import { useEdgeBoxDrag, useEdgeBoxPosition, usePaddingValues } from "@edgebox/react";
 
 export function DraggableStickyNote() {
@@ -26,28 +26,26 @@ export function DraggableStickyNote() {
     safeZone,
   });
 
-  const style = useMemo((): React.CSSProperties => {
-    return {
-      position: "fixed",
-      left: edges.left,
-      top: edges.top,
-      width,
-      height,
-      transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)`,
-      background: "#ffe066",
-      color: "#1b1b1b",
-      borderRadius: 16,
-      padding: 14,
-      boxShadow: isDragging
-        ? "0 20px 60px rgba(0,0,0,0.45)"
-        : isPendingDrag
-          ? "0 16px 40px rgba(0,0,0,0.35)"
-          : "0 12px 30px rgba(0,0,0,0.3)",
-      userSelect: "none",
-      touchAction: "none",
-      cursor: isDragging ? "grabbing" : "grab",
-    };
-  }, [dragOffset, edges.left, edges.top, height, isDragging, isPendingDrag, width]);
+  const style: React.CSSProperties = {
+    position: "fixed",
+    left: edges.left,
+    top: edges.top,
+    width,
+    height,
+    transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)`,
+    background: "#ffe066",
+    color: "#1b1b1b",
+    borderRadius: 16,
+    padding: 14,
+    boxShadow: isDragging
+      ? "0 20px 60px rgba(0,0,0,0.45)"
+      : isPendingDrag
+        ? "0 16px 40px rgba(0,0,0,0.35)"
+        : "0 12px 30px rgba(0,0,0,0.3)",
+    userSelect: "none",
+    touchAction: "none",
+    cursor: isDragging ? "grabbing" : "grab",
+  };
 
   return (
     <div
