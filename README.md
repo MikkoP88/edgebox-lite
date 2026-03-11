@@ -4,6 +4,17 @@ EdgeBox is a small hook system for building **floating UI** in React (draggable 
 
 This repo contains the `@edgebox/react` package.
 
+## Features (at a glance)
+
+- **Anchored positioning**: start at `top-left`, `bottom-right`, `top-center`, etc.
+- **Edges-first model**: position is stored as `left/right/top/bottom` viewport coordinates.
+- **Drag**: pointer drag with safe-zone clamping (keeps the element on-screen).
+- **Resize**: 8-direction resize with min/max constraints and safe-zone clamping.
+- **Commit or not**: you can keep temporary offsets in state, or “commit” the final result back into `edges`.
+- **Auto focus snapping** (optional): snap to edges / center / corners when a gesture ends.
+- **Viewport clamp for auto-sized elements**: measure DOM size changes (via `ResizeObserver`) and clamp into the viewport.
+- **SSR-aware**: hooks guard access to `window`.
+
 ## Install
 
 Published package:
@@ -19,6 +30,14 @@ npm install
 npm run build
 ```
 
+Try the runnable examples:
+
+```bash
+cd examples/playground
+npm install
+npm run dev
+```
+
 ## Exports
 
 ```ts
@@ -30,6 +49,81 @@ import {
   useEdgeBoxResize,
   useEdgeBoxViewportClamp,
 } from "@edgebox/react";
+```
+
+## Quick start (drag + resize)
+
+Minimal pattern:
+
+1) `useEdgeBoxPosition` gives you committed `edges`.
+2) `useEdgeBoxDrag` / `useEdgeBoxResize` give you temporary offsets.
+3) You render `position: fixed` with `left/top` from `edges`, and apply a `transform` using offsets.
+
+```tsx
+import { useMemo, useRef, useState } from "react";
+import { useEdgeBoxPosition, useEdgeBoxDrag, useEdgeBoxResize, usePaddingValues } from "@edgebox/react";
+
+export function FloatingWindow() {
+  const ref = useRef<HTMLDivElement>(null);
+  const paddingValues = usePaddingValues(24);
+  const safeZone = 16;
+
+  const [committedSize, setCommittedSize] = useState({ width: 420, height: 260 });
+
+  const { edges, updateEdges } = useEdgeBoxPosition({
+    position: "bottom-right",
+    width: committedSize.width,
+    height: committedSize.height,
+    padding: paddingValues,
+    safeZone,
+  });
+
+  const { dragOffset, handleMouseDown, handleTouchStart, isDragging, isPendingDrag } = useEdgeBoxDrag({
+    edges,
+    updateEdges,
+    commitToEdges: true,
+    elementRef: ref,
+    safeZone,
+  });
+
+  const { dimensions, resizeOffset, isResizing, handleResizeStart } = useEdgeBoxResize({
+    edges,
+    updateEdges,
+    commitToEdges: true,
+    onCommitSize: setCommittedSize,
+    baseOffset: dragOffset,
+    initialWidth: committedSize.width,
+    initialHeight: committedSize.height,
+    minWidth: 300,
+    minHeight: 200,
+    safeZone,
+  });
+
+  const currentOffset = useMemo(
+    () => ({
+      x: dragOffset.x + (isResizing ? resizeOffset.x : 0),
+      y: dragOffset.y + (isResizing ? resizeOffset.y : 0),
+    }),
+    [dragOffset, isResizing, resizeOffset]
+  );
+
+  const style = useMemo((): React.CSSProperties => ({
+    position: "fixed",
+    left: edges.left,
+    top: edges.top,
+    width: dimensions.width,
+    height: dimensions.height,
+    transform: `translate3d(${currentOffset.x}px, ${currentOffset.y}px, 0)`,
+    touchAction: "none",
+  }), [edges, dimensions, currentOffset]);
+
+  return (
+    <div ref={ref} style={style} onMouseDown={handleMouseDown} onTouchStart={handleTouchStart}>
+      <div>{isDragging ? "Dragging" : isPendingDrag ? "Hold…" : isResizing ? "Resizing" : "Idle"}</div>
+      <button onMouseDown={(e) => handleResizeStart("se", e)}>Resize (bottom-right)</button>
+    </div>
+  );
+}
 ```
 
 Types:
@@ -61,6 +155,26 @@ From `package.json`:
 EdgeBox itself is designed to be dependency-light and is intended to work with any React app that can run hooks.
 
 ## Core concepts
+
+### Visual model (edges + offsets)
+
+Think of EdgeBox in two layers:
+
+- **Committed position**: `edges` (viewport coordinates)
+- **Temporary motion**: offsets (`dragOffset`, `resizeOffset`) applied via CSS `transform`
+
+```
+viewport
+┌──────────────────────────────────────────────┐
+│ safeZone inset                               │
+│   ┌──────────────────────────────────────┐   │
+│   │                                      │   │
+│   │   left/top/right/bottom = edges      │   │
+│   │   + translate3d(x,y,0) = offsets     │   │
+│   │                                      │   │
+│   └──────────────────────────────────────┘   │
+└──────────────────────────────────────────────┘
+```
 
 ### 1) Edges are viewport coordinates
 
@@ -174,7 +288,7 @@ Auto focus means: if the box is already inside the `safeZone` and ends up *near*
 - `autoFocus?: EdgeBoxAutoFocus` (default: `unset`)
 - `autoFocusSensitivity?: number` (default: `5`) – interpreted as a **percentage of the viewport** (higher = easier snapping)
 
-Supported presets (see `packages/edgebox/src/autoFocus.ts` for the authoritative list):
+Supported presets (see `src/autoFocus.ts` for the authoritative list):
 
 - `unset`
 - `all`, `full`
