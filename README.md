@@ -1,6 +1,12 @@
 # `@edgebox/react`
 
-EdgeBox is a small hook system for building **floating UI** in React (draggable menus, resizable panels, chat windows, tool palettes) using an **edges-first** coordinate model.
+EdgeBox is a lightweight hook system for building **floating UI** in React (draggable menus, resizable panels, chat windows, tool palettes) using an **edges-first** coordinate model.
+
+It’s designed for smooth interactions and low overhead:
+
+- Uses `transform: translate3d(...)` for motion (good GPU-friendly rendering, avoids layout thrash)
+- Keeps the runtime dependency-free and the math simple (good for low CPU usage during pointer move)
+- Supports “commit” mode so frequent pointer updates don’t permanently rewrite your committed position
 
 This repo contains the `@edgebox/react` package.
 
@@ -14,6 +20,26 @@ This repo contains the `@edgebox/react` package.
 - **Auto focus snapping** (optional): snap to edges / center / corners when a gesture ends.
 - **Viewport clamp for auto-sized elements**: measure DOM size changes (via `ResizeObserver`) and clamp into the viewport.
 - **SSR-aware**: hooks guard access to `window`.
+
+## Compatibility
+
+**Languages**
+
+- JavaScript (ESM + CJS builds)
+- TypeScript (types included)
+
+**React**
+
+- React `>=18` (hooks)
+
+**Frameworks / bundlers**
+
+- Vite
+- Next.js (client components; SSR-safe guards included)
+- Remix
+- CRA / custom Webpack
+
+In general, it works in any React app that can run hooks in the browser.
 
 ## Install
 
@@ -134,7 +160,7 @@ Types:
 - `PaddingValue`, `PaddingValues`
 - `CssEdgePosition`, `EdgePosition`
 
-## Beginner tutorial (copy/paste)
+## Tutorial (copy/paste)
 
 ### Requirements
 
