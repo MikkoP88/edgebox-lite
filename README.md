@@ -134,6 +134,123 @@ Types:
 - `PaddingValue`, `PaddingValues`
 - `CssEdgePosition`, `EdgePosition`
 
+## Beginner tutorial (copy/paste)
+
+### Requirements
+
+- React 18+
+- Your floating element should usually be `position: fixed` (because EdgeBox uses viewport coordinates)
+- Add `touchAction: "none"` to the draggable/resizable element (prevents the browser from treating touch as scroll/zoom)
+
+### Step 1: Create a `ref`
+
+EdgeBox can measure the element for better boundary clamping.
+
+```tsx
+const panelRef = useRef<HTMLDivElement>(null);
+```
+
+### Step 2: Pick `padding` and `safeZone`
+
+- `padding` = where the element starts (anchored inset)
+- `safeZone` = where the element is allowed to be (clamp boundary)
+
+```tsx
+const paddingValues = usePaddingValues(24);
+const safeZone = 16;
+```
+
+### Step 3: Position (committed `edges`)
+
+```tsx
+const { edges, updateEdges } = useEdgeBoxPosition({
+  position: "bottom-right",
+  width: 420,
+  height: 260,
+  padding: paddingValues,
+  safeZone,
+});
+```
+
+### Step 4: Drag (temporary `dragOffset`)
+
+```tsx
+const { dragOffset, handleMouseDown, handleTouchStart } = useEdgeBoxDrag({
+  edges,
+  updateEdges,
+  commitToEdges: true,
+  elementRef: panelRef,
+  safeZone,
+});
+```
+
+### Step 5: Resize (temporary `resizeOffset` + `dimensions`)
+
+Most UIs also keep a committed size, so the next render starts from the last size.
+
+```tsx
+const [committedSize, setCommittedSize] = useState({ width: 420, height: 260 });
+
+const { dimensions, resizeOffset, handleResizeStart, isResizing } = useEdgeBoxResize({
+  edges,
+  updateEdges,
+  commitToEdges: true,
+  onCommitSize: setCommittedSize,
+  baseOffset: dragOffset,
+  initialWidth: committedSize.width,
+  initialHeight: committedSize.height,
+  minWidth: 300,
+  minHeight: 200,
+  safeZone,
+});
+```
+
+### Step 6: Render (`edges` + offsets)
+
+```tsx
+const offset = {
+  x: dragOffset.x + (isResizing ? resizeOffset.x : 0),
+  y: dragOffset.y + (isResizing ? resizeOffset.y : 0),
+};
+
+return (
+  <div
+    ref={panelRef}
+    style={{
+      position: "fixed",
+      left: edges.left,
+      top: edges.top,
+      width: dimensions.width,
+      height: dimensions.height,
+      transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
+      touchAction: "none",
+    }}
+    onMouseDown={handleMouseDown}
+    onTouchStart={handleTouchStart}
+  />
+);
+```
+
+## API cheat sheet (what each hook does)
+
+```mermaid
+flowchart LR
+  A[useEdgeBoxPosition] -->|edges + updateEdges| B[Your component]
+  A --> C[useEdgeBoxDrag]
+  A --> D[useEdgeBoxResize]
+  C -->|dragOffset| B
+  D -->|dimensions + resizeOffset| B
+  B -->|style: left/top + transform| E[DOM]
+```
+
+| Hook | What it solves | You give it | You get back |
+|---|---|---|---|
+| `usePaddingValues` | Turn shorthand padding into `{top,right,bottom,left}` | `number` or object | `PaddingValues` |
+| `useEdgeBoxPosition` | Initial anchored placement + viewport-resize recalc | `position`, `width/height`, `padding`, `safeZone` | `edges`, `updateEdges`, `recalculate` |
+| `useEdgeBoxDrag` | Dragging + boundary clamping | `edges`, `updateEdges`, `elementRef`, `safeZone` | `dragOffset`, `handleMouseDown`, `handleTouchStart`, flags |
+| `useEdgeBoxResize` | Resizing + constraints + safe-zone clamping | `edges`, `updateEdges`, `baseOffset`, constraints | `dimensions`, `resizeOffset`, `handleResizeStart`, flags |
+| `useEdgeBoxViewportClamp` | Keep auto-sized DOM inside viewport | `elementRef`, `updateEdges`, `deps` | (no return; commits corrected `edges`) |
+
 ## Package structure (this repo)
 
 Package layout:
