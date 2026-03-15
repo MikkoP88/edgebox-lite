@@ -1,4 +1,4 @@
-# `@edgebox/react`
+# EdgeBox - `@edgebox/react`
 
 EdgeBox is a lightweight hook system for building **floating UI** in React (draggable menus, resizable panels, chat windows, tool palettes) using an **edges-first** coordinate model.
 
