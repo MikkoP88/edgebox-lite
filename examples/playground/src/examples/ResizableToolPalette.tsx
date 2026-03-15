@@ -4,7 +4,7 @@ import {
   useEdgeBoxResize,
   usePaddingValues,
   type ResizeDirection,
-} from "@edgebox/react";
+} from "@edgebox-lite/react";
 
 function Handle({ dir, onStart }: { dir: ResizeDirection; onStart: (dir: ResizeDirection, e: React.MouseEvent) => void }) {
   const size = 10;

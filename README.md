@@ -1,4 +1,4 @@
-# EdgeBox - `@edgebox/react`
+# EdgeBox Lite - `@edgebox-lite/react`
 
 EdgeBox is a lightweight hook system for building **floating UI** in React (draggable menus, resizable panels, chat windows, tool palettes) using an **edges-first** coordinate model.
 
@@ -8,7 +8,7 @@ It’s designed for smooth interactions and low overhead:
 - Keeps the runtime dependency-free and the math simple (good for low CPU usage during pointer move)
 - Supports “commit” mode so frequent pointer updates don’t permanently rewrite your committed position
 
-This repo contains the `@edgebox/react` package.
+This repo contains the `@edgebox-lite/react` package.
 
 ## Features (at a glance)
 
@@ -47,7 +47,7 @@ In general, it works in any React app that can run hooks in the browser.
 Published package:
 
 ```bash
-npm install @edgebox/react
+npm install @edgebox-lite/react
 ```
 
 Local development (this repo):
@@ -75,7 +75,7 @@ import {
   useEdgeBoxDrag,
   useEdgeBoxResize,
   useEdgeBoxViewportClamp,
-} from "@edgebox/react";
+} from "@edgebox-lite/react";
 ```
 
 ## Quick start (drag + resize)
@@ -88,7 +88,7 @@ Minimal pattern:
 
 ```tsx
 import { useMemo, useRef, useState } from "react";
-import { useEdgeBoxPosition, useEdgeBoxDrag, useEdgeBoxResize, usePaddingValues } from "@edgebox/react";
+import { useEdgeBoxPosition, useEdgeBoxDrag, useEdgeBoxResize, usePaddingValues } from "@edgebox-lite/react";
 
 export function FloatingWindow() {
   const ref = useRef<HTMLDivElement>(null);

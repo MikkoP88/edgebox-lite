@@ -4,7 +4,7 @@ import {
   useEdgeBoxPosition,
   useEdgeBoxViewportClamp,
   usePaddingValues,
-} from "@edgebox/react";
+} from "@edgebox-lite/react";
 
 export function AutoSizedQuickMenu() {
   const menuRef = useRef<HTMLDivElement>(null);

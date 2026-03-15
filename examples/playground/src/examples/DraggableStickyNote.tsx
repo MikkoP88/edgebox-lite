@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { useEdgeBoxDrag, useEdgeBoxPosition, usePaddingValues } from "@edgebox/react";
+import { useEdgeBoxDrag, useEdgeBoxPosition, usePaddingValues } from "@edgebox-lite/react";
 
 export function DraggableStickyNote() {
   const noteRef = useRef<HTMLDivElement>(null);

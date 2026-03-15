@@ -5,7 +5,7 @@ import {
   useEdgeBoxResize,
   usePaddingValues,
   type ResizeDirection,
-} from "@edgebox/react";
+} from "@edgebox-lite/react";
 
 function ResizeHandle({
   dir,
