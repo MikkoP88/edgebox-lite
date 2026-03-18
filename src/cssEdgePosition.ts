@@ -12,7 +12,7 @@ export interface CssEdgePosition {
   bottom?: number;
 }
 
-/** Return value for useCssEdgePosition hook */
+/** Return value for useEdgeBoxCssPosition hook */
 export interface UseCssEdgePositionResult {
   /** Function to calculate CSS edge position */
   cssEdgePosition: () => CssEdgePosition;
@@ -23,7 +23,7 @@ export interface UseCssEdgePositionResult {
 /**
  * Custom hook that calculates CSS edge position for boundary calculations.
  */
-export function useCssEdgePosition(options: {
+export function useEdgeBoxCssPosition(options: {
   position: EdgePosition;
   paddingValues: PaddingValues;
 }): UseCssEdgePositionResult {
@@ -65,3 +65,6 @@ export function useCssEdgePosition(options: {
     initialCssPosition,
   };
 }
+
+/** @deprecated Use `useEdgeBoxCssPosition` instead. */
+export const useCssEdgePosition = useEdgeBoxCssPosition;

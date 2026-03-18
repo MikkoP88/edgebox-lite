@@ -10,7 +10,7 @@
 export { useEdgeBoxPaddingValues, usePaddingValues } from "./padding";
 export type { PaddingValue, PaddingValues } from "./padding";
 
-export { useCssEdgePosition } from "./cssEdgePosition";
+export { useEdgeBoxCssPosition, useCssEdgePosition } from "./cssEdgePosition";
 export type { CssEdgePosition, EdgePosition, UseCssEdgePositionResult } from "./cssEdgePosition";
 
 export type { ResizeDirection } from "./types";

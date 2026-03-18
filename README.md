@@ -70,7 +70,7 @@ npm run dev
 ```ts
 import {
   useEdgeBoxPaddingValues,
-  useCssEdgePosition,
+  useEdgeBoxCssPosition,
   useEdgeBoxPosition,
   useEdgeBoxDrag,
   useEdgeBoxResize,
@@ -518,7 +518,7 @@ Returns:
 
 - `clampNow()` – manually measure and clamp the element into the viewport immediately
 
-### `useCssEdgePosition(options)`
+### `useEdgeBoxCssPosition(options)`
 
 Low-level helper that returns “CSS edge style” (`left`/`right`/`top`/`bottom`) for an anchored position. Most components in this repo use `useEdgeBoxPosition` directly instead.
 
