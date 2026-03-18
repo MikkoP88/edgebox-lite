@@ -22,7 +22,7 @@ export interface PaddingValues {
 /**
  * Custom hook that resolves padding prop into individual edge values.
  */
-export function usePaddingValues(
+export function useEdgeBoxPaddingValues(
   padding: PaddingValue = 24
 ): PaddingValues {
   return useMemo(() => {
@@ -49,3 +49,6 @@ export function usePaddingValues(
     };
   }, [padding]);
 }
+
+/** @deprecated Use `useEdgeBoxPaddingValues` instead. */
+export const usePaddingValues = useEdgeBoxPaddingValues;

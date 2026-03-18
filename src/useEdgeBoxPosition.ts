@@ -33,7 +33,7 @@ export interface UseEdgeBoxPositionOptions {
 export interface UseEdgeBoxPositionResult {
   edges: EdgeBoxEdges;
   recalculate: () => void;
-  updateEdges: (edges: Partial<EdgeBoxEdges>) => void;
+  updateEdges: (edges: Partial<EdgeBoxEdges>, manualPosition?: boolean) => void;
   resetPosition: () => void;
 }
 
@@ -163,11 +163,17 @@ export function useEdgeBoxPosition(options: UseEdgeBoxPositionOptions = {}): Use
       return;
     }
 
-    const newEdges = calculateEdges(position, width, height, paddingValues, safeZone);
-    setEdges(newEdges);
+    setEdges(prev => {
+      const next = calculateEdges(position, width, height, paddingValues, safeZone);
+      if (prev.left === next.left && prev.top === next.top &&
+          prev.right === next.right && prev.bottom === next.bottom) {
+        return prev;
+      }
+      return next;
+    });
   }, [position, width, height, paddingValues, safeZone]);
 
-  const updateEdges = useCallback((newEdges: Partial<EdgeBoxEdges>) => {
+  const updateEdges = useCallback((newEdges: Partial<EdgeBoxEdges>, manualPosition = true) => {
     setEdges(prev => {
       const merged = {
         left: newEdges.left ?? prev.left,
@@ -178,12 +184,19 @@ export function useEdgeBoxPosition(options: UseEdgeBoxPositionOptions = {}): Use
       return { ...merged, center: calculateCenter(merged) };
     });
 
-    isManualPositionRef.current = true;
+    isManualPositionRef.current = manualPosition;
   }, []);
 
   const resetPosition = useCallback(() => {
     isManualPositionRef.current = false;
-    setEdges(calculateEdges(position, width, height, paddingValues, safeZone));
+    setEdges(prev => {
+      const next = calculateEdges(position, width, height, paddingValues, safeZone);
+      if (prev.left === next.left && prev.top === next.top &&
+          prev.right === next.right && prev.bottom === next.bottom) {
+        return prev;
+      }
+      return next;
+    });
   }, [position, width, height, paddingValues, safeZone]);
 
   useEffect(() => {

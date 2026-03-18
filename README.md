@@ -69,7 +69,7 @@ npm run dev
 
 ```ts
 import {
-  usePaddingValues,
+  useEdgeBoxPaddingValues,
   useCssEdgePosition,
   useEdgeBoxPosition,
   useEdgeBoxDrag,
@@ -88,11 +88,11 @@ Minimal pattern:
 
 ```tsx
 import { useMemo, useRef, useState } from "react";
-import { useEdgeBoxPosition, useEdgeBoxDrag, useEdgeBoxResize, usePaddingValues } from "@edgebox-lite/react";
+import { useEdgeBoxPosition, useEdgeBoxDrag, useEdgeBoxResize, useEdgeBoxPaddingValues } from "@edgebox-lite/react";
 
 export function FloatingWindow() {
   const ref = useRef<HTMLDivElement>(null);
-  const paddingValues = usePaddingValues(24);
+  const paddingValues = useEdgeBoxPaddingValues(24);
   const safeZone = 16;
 
   const [committedSize, setCommittedSize] = useState({ width: 420, height: 260 });
@@ -191,7 +191,7 @@ const panelRef = useRef<HTMLDivElement>(null);
 - `safeZone` = where the element is allowed to be (clamp boundary)
 
 ```tsx
-const paddingValues = usePaddingValues(24);
+const paddingValues = useEdgeBoxPaddingValues(24);
 const safeZone = 16;
 ```
 
@@ -280,7 +280,7 @@ flowchart LR
 
 | Hook | What it solves | You give it | You get back |
 |---|---|---|---|
-| `usePaddingValues` | Turn shorthand padding into `{top,right,bottom,left}` | `number` or object | `PaddingValues` |
+| `useEdgeBoxPaddingValues` | Turn shorthand padding into `{top,right,bottom,left}` | `number` or object | `PaddingValues` |
 | `useEdgeBoxPosition` | Initial anchored placement + viewport-resize recalc | `position`, `width/height`, `padding`, `safeZone` | `edges`, `updateEdges`, `recalculate`, `resetPosition` |
 | `useEdgeBoxDrag` | Dragging + boundary clamping | `edges`, `updateEdges`, `elementRef`, `safeZone` | `dragOffset`, `handleMouseDown`, `handleTouchStart`, `resetDragOffset`, `cancelDrag`, flags |
 | `useEdgeBoxResize` | Resizing + constraints + safe-zone clamping | `edges`, `updateEdges`, `baseOffset`, constraints | `dimensions`, `resizeOffset`, `handleResizeStart`, `resetSize(options?)`, flags |
@@ -374,12 +374,12 @@ Both `useEdgeBoxDrag` and `useEdgeBoxResize` support `commitToEdges`:
 
 ## Hook reference
 
-### `usePaddingValues(padding)`
+### `useEdgeBoxPaddingValues(padding)`
 
 Normalizes a `number` or shorthand object into `PaddingValues`.
 
 ```ts
-const paddingValues = usePaddingValues({ all: 24, horizontal: 32 });
+const paddingValues = useEdgeBoxPaddingValues({ all: 24, horizontal: 32 });
 // => { top: 24, right: 32, bottom: 24, left: 32 }
 ```
 

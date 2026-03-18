@@ -7,7 +7,7 @@
  * type/name collisions (e.g. multiple `Position`/`Dimensions` types).
  */
 
-export { usePaddingValues } from "./padding";
+export { useEdgeBoxPaddingValues, usePaddingValues } from "./padding";
 export type { PaddingValue, PaddingValues } from "./padding";
 
 export { useCssEdgePosition } from "./cssEdgePosition";
