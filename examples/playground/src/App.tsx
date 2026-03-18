@@ -39,11 +39,11 @@ const exampleMeta: Record<ExampleId, { label: string; features: string[] }> = {
   },
   draggable: {
     label: "Draggable sticky note",
-    features: ["commitToEdges: false", "cancelDrag", "resetDragOffset", "baseTransform", "onDragEnd"],
+    features: ["useEdgeBox", "commitToEdges: false", "resetDragOffset", "baseTransform", "onDragEnd"],
   },
   resizable: {
     label: "Resizable tool palette",
-    features: ["touch resize", "min/max constraints", "resetSize({ commit: true })", "onResizeEnd"],
+    features: ["useEdgeBox", "touch resize", "min/max constraints", "resetSize({ commit: true })"],
   },
   "auto-size-clamp": {
     label: "Auto-sized quick menu + clamp",
@@ -51,7 +51,7 @@ const exampleMeta: Record<ExampleId, { label: string; features: string[] }> = {
   },
   autofocus: {
     label: "Auto focus snapping",
-    features: ["drag snapping", "resize snapping", "preset string areas", "touch handles"],
+    features: ["useEdgeBox", "drag snapping", "resize snapping", "preset string areas"],
   },
   "css-position": {
     label: "CSS edge positioning",
@@ -104,8 +104,10 @@ export function App() {
                 <option value="drag-resize">{exampleMeta["drag-resize"].label}</option>
                 <option value="draggable">{exampleMeta.draggable.label}</option>
                 <option value="resizable">{exampleMeta.resizable.label}</option>
-                <option value="auto-size-clamp">{exampleMeta["auto-size-clamp"].label}</option>
                 <option value="autofocus">{exampleMeta.autofocus.label}</option>
+              </optgroup>
+              <optgroup label="Advanced examples">
+                <option value="auto-size-clamp">{exampleMeta["auto-size-clamp"].label}</option>
                 <option value="css-position">{exampleMeta["css-position"].label}</option>
               </optgroup>
             </select>

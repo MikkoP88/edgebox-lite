@@ -1,53 +1,33 @@
-import { useRef, useState } from "react";
-import {
-  useEdgeBoxDrag,
-  useEdgeBoxPaddingValues,
-  useEdgeBoxPosition,
-  useEdgeBoxTransform,
-} from "@edgebox-lite/react";
+import { useState } from "react";
+import { useEdgeBox } from "@edgebox-lite/react";
 
 export function DraggableStickyNote() {
-  const noteRef = useRef<HTMLDivElement>(null);
   const [lastRelease, setLastRelease] = useState("Not released yet");
 
-  const paddingValues = useEdgeBoxPaddingValues(24);
-  const safeZone = 16;
-
-  const width = 260;
-  const height = 180;
-
-  const { edges } = useEdgeBoxPosition({
-    position: "bottom-right",
-    width,
-    height,
-    padding: paddingValues,
-    safeZone,
-  });
-
   const {
+    ref,
+    style: edgeBoxStyle,
     dragOffset,
     isDragging,
     isPendingDrag,
-    handleMouseDown,
-    handleTouchStart,
+    getDragProps,
     resetDragOffset,
     cancelDrag,
-  } = useEdgeBoxDrag({
-    edges,
+  } = useEdgeBox({
+    position: "bottom-right",
+    width: 260,
+    height: 180,
+    padding: 24,
+    safeZone: 16,
     commitToEdges: false,
-    elementRef: noteRef,
-    safeZone,
+    resizable: false,
+    baseTransform: "rotate(-2deg)",
     dragStartDistance: 10,
     dragStartDelay: 180,
     dragEndEventDelay: 220,
     onDragEnd: (finalOffset) => {
       setLastRelease(`${Math.round(finalOffset.x)}px, ${Math.round(finalOffset.y)}px`);
     },
-  });
-
-  const { transform } = useEdgeBoxTransform({
-    dragOffset,
-    baseTransform: "rotate(-2deg)",
   });
 
   const stopInteraction: React.MouseEventHandler<HTMLButtonElement> = (e) => {
@@ -58,13 +38,8 @@ export function DraggableStickyNote() {
     e.stopPropagation();
   };
 
-  const style: React.CSSProperties = {
-    position: "fixed",
-    left: edges.left,
-    top: edges.top,
-    width,
-    height,
-    transform,
+  const noteStyle: React.CSSProperties = {
+    ...edgeBoxStyle,
     background: "#ffe066",
     color: "#1b1b1b",
     borderRadius: 16,
@@ -81,17 +56,16 @@ export function DraggableStickyNote() {
 
   return (
     <div
-      ref={noteRef}
-      style={style}
-      onMouseDown={handleMouseDown}
-      onTouchStart={handleTouchStart}
+      ref={ref}
+      style={noteStyle}
+      {...getDragProps()}
     >
       <strong>DraggableStickyNote</strong>
       <p style={{ margin: "10px 0 0", lineHeight: 1.25 }}>
-        This demo uses <code>commitToEdges: false</code>, so the drag offset stays as the source of truth until you reset it.
+        This demo uses <code>useEdgeBox()</code> with <code>commitToEdges: false</code>, so the drag offset stays as the source of truth until you reset it.
       </p>
       <p style={{ margin: "10px 0 0", lineHeight: 1.25, opacity: 0.9 }}>
-        Safe zone: <code>{safeZone}px</code>. Base transform is composed with <code>rotate(-2deg)</code>.
+        Safe zone: <code>16px</code>. Base transform is composed with <code>rotate(-2deg)</code>.
       </p>
 
       <div style={{ marginTop: 12, fontSize: 13, lineHeight: 1.35 }}>
