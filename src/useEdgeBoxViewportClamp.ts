@@ -10,6 +10,10 @@ export interface UseEdgeBoxViewportClampOptions {
   deps?: readonly unknown[];
 }
 
+export interface UseEdgeBoxViewportClampResult {
+  clampNow: () => void;
+}
+
 /**
  * Keeps an auto-sized element inside the viewport by measuring its DOM rect and committing
  * corrected edges via `updateEdges`.
@@ -22,7 +26,7 @@ export function useEdgeBoxViewportClamp({
   safeZone = DEFAULT_SAFE_ZONE,
   disabled = false,
   deps = [],
-}: UseEdgeBoxViewportClampOptions) {
+}: UseEdgeBoxViewportClampOptions): UseEdgeBoxViewportClampResult {
   const clampIntoViewport = useCallback(() => {
     if (disabled) return;
     if (typeof window === "undefined") return;
@@ -98,4 +102,8 @@ export function useEdgeBoxViewportClamp({
     ro.observe(el);
     return () => ro.disconnect();
   }, [disabled, clampIntoViewport, elementRef]);
+
+  return {
+    clampNow: clampIntoViewport,
+  };
 }

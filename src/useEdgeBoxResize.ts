@@ -40,13 +40,18 @@ export interface UseEdgeBoxResizeOptions {
   onResizeEnd?: (finalDimensions: Dimensions, finalOffset: Position) => void;
 }
 
+export interface ResetSizeOptions {
+  commit?: boolean;
+}
+
 export interface UseEdgeBoxResizeResult {
   dimensions: Dimensions;
   resizeOffset: Position;
   isResizing: boolean;
   resizeDirection: ResizeDirection | null;
   handleResizeStart: (direction: ResizeDirection, e: React.MouseEvent | React.TouchEvent) => void;
-  resetDimensions: () => void;
+  resetDimensions: (options?: ResetSizeOptions) => void;
+  resetSize: (options?: ResetSizeOptions) => void;
 }
 
 export function useEdgeBoxResize({
@@ -260,10 +265,67 @@ export function useEdgeBoxResize({
     }
   }, [autoFocus, autoFocusSensitivity, commitToEdges, onCommitSize, onResizeEnd, safeZone, updateEdges]);
 
-  const resetDimensions = useCallback(() => {
-    setDimensions({ width: initialWidth, height: initialHeight });
+  const resetSize = useCallback((options?: ResetSizeOptions) => {
+    const commit = options?.commit ?? false;
+
+    const requestedDimensions = {
+      width: initialWidth,
+      height: initialHeight,
+    };
+
+    const finalDimensions = { ...requestedDimensions };
+
+    if (typeof window !== 'undefined') {
+      const availableWidth = Math.max(0, window.innerWidth - safeZone * 2);
+      const availableHeight = Math.max(0, window.innerHeight - safeZone * 2);
+
+      finalDimensions.width = Math.min(
+        Math.max(minWidth, Math.min(maxWidth, requestedDimensions.width)),
+        availableWidth || requestedDimensions.width
+      );
+
+      finalDimensions.height = Math.min(
+        Math.max(minHeight, Math.min(maxHeight, requestedDimensions.height)),
+        availableHeight || requestedDimensions.height
+      );
+    }
+
+    activeEventIdRef.current = null;
+    setIsResizing(false);
+    setResizeDirection(null);
+
+    dimensionsRef.current = finalDimensions;
+    resizeOffsetRef.current = { x: 0, y: 0 };
+    startDimensionsRef.current = finalDimensions;
+    startOffsetRef.current = { x: 0, y: 0 };
+
+    setDimensions(finalDimensions);
     setResizeOffset({ x: 0, y: 0 });
-  }, [initialWidth, initialHeight]);
+
+    if (commit) {
+      onCommitSize?.(finalDimensions);
+
+      if (updateEdges) {
+        const baseEdges = edgesRef.current;
+        let left = baseEdges.left;
+        let top = baseEdges.top;
+
+        if (typeof window !== 'undefined') {
+          left = Math.max(safeZone, Math.min(window.innerWidth - safeZone - finalDimensions.width, left));
+          top = Math.max(safeZone, Math.min(window.innerHeight - safeZone - finalDimensions.height, top));
+        }
+
+        updateEdges({
+          left,
+          top,
+          right: left + finalDimensions.width,
+          bottom: top + finalDimensions.height,
+        });
+      }
+    }
+  }, [initialWidth, initialHeight, maxHeight, maxWidth, minHeight, minWidth, onCommitSize, safeZone, updateEdges]);
+
+  const resetDimensions = resetSize;
 
   useEffect(() => {
     if (!isResizing) return;
@@ -334,5 +396,6 @@ export function useEdgeBoxResize({
     resizeDirection,
     handleResizeStart,
     resetDimensions,
+    resetSize,
   };
 }

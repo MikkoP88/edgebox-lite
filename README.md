@@ -281,10 +281,10 @@ flowchart LR
 | Hook | What it solves | You give it | You get back |
 |---|---|---|---|
 | `usePaddingValues` | Turn shorthand padding into `{top,right,bottom,left}` | `number` or object | `PaddingValues` |
-| `useEdgeBoxPosition` | Initial anchored placement + viewport-resize recalc | `position`, `width/height`, `padding`, `safeZone` | `edges`, `updateEdges`, `recalculate` |
-| `useEdgeBoxDrag` | Dragging + boundary clamping | `edges`, `updateEdges`, `elementRef`, `safeZone` | `dragOffset`, `handleMouseDown`, `handleTouchStart`, flags |
-| `useEdgeBoxResize` | Resizing + constraints + safe-zone clamping | `edges`, `updateEdges`, `baseOffset`, constraints | `dimensions`, `resizeOffset`, `handleResizeStart`, flags |
-| `useEdgeBoxViewportClamp` | Keep auto-sized DOM inside viewport | `elementRef`, `updateEdges`, `deps` | (no return; commits corrected `edges`) |
+| `useEdgeBoxPosition` | Initial anchored placement + viewport-resize recalc | `position`, `width/height`, `padding`, `safeZone` | `edges`, `updateEdges`, `recalculate`, `resetPosition` |
+| `useEdgeBoxDrag` | Dragging + boundary clamping | `edges`, `updateEdges`, `elementRef`, `safeZone` | `dragOffset`, `handleMouseDown`, `handleTouchStart`, `resetDragOffset`, `cancelDrag`, flags |
+| `useEdgeBoxResize` | Resizing + constraints + safe-zone clamping | `edges`, `updateEdges`, `baseOffset`, constraints | `dimensions`, `resizeOffset`, `handleResizeStart`, `resetSize(options?)`, flags |
+| `useEdgeBoxViewportClamp` | Keep auto-sized DOM inside viewport | `elementRef`, `updateEdges`, `deps` | `clampNow()` |
 
 ## Package structure (this repo)
 
@@ -400,6 +400,7 @@ Returns:
 - `edges`
 - `recalculate()`
 - `updateEdges(partialEdges)` – switches EdgeBox into “manual mode” (future recalcs clamp the manual position instead of re-anchoring)
+- `resetPosition()` – clears manual mode and restores the anchored default position for the current `position`, `padding`, `width`, and `height`
 
 ### `useEdgeBoxDrag(options)`
 
@@ -426,6 +427,7 @@ Returns:
 - `isDragging`, `isPendingDrag`
 - `handleMouseDown(e)`, `handleTouchStart(e)`
 - `resetDragOffset()`
+- `cancelDrag()` – clears pending/active drag state and resets the temporary drag offset
 
 Multitouch note:
 
@@ -485,7 +487,14 @@ Returns:
 - `resizeOffset: { x, y }`
 - `isResizing`, `resizeDirection`
 - `handleResizeStart(direction, e)` – accepts `React.MouseEvent | React.TouchEvent`
-- `resetDimensions()`
+- `resetSize(options?)` – cancels active resize state and restores the current `initialWidth` / `initialHeight`
+- `resetDimensions(options?)` – compatibility alias for `resetSize(options?)`
+
+Reset options:
+
+- `commit?: boolean` (default: `false`)
+  - `resetSize()` resets local resize state only
+  - `resetSize({ commit: true })` also calls `onCommitSize(...)` and commits reset dimensions back into `edges` through `updateEdges(...)`
 
 Multitouch note:
 
@@ -504,6 +513,10 @@ Options:
 - `safeZone?: number` (default: `0`)
 - `disabled?: boolean` (default: `false`)
 - `deps?: readonly unknown[]` (default: `[]`) – re-clamp after these dependencies change
+
+Returns:
+
+- `clampNow()` – manually measure and clamp the element into the viewport immediately
 
 ### `useCssEdgePosition(options)`
 

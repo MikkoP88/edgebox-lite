@@ -34,6 +34,7 @@ export interface UseEdgeBoxPositionResult {
   edges: EdgeBoxEdges;
   recalculate: () => void;
   updateEdges: (edges: Partial<EdgeBoxEdges>) => void;
+  resetPosition: () => void;
 }
 
 function calculateCenter(edges: Omit<EdgeBoxEdges, 'center'>): CenterPoint {
@@ -47,7 +48,8 @@ function calculateEdges(
   position: EdgePosition,
   width: number | undefined,
   height: number | undefined,
-  paddingValues: PaddingValues
+  paddingValues: PaddingValues,
+  safeZone: number,
 ): EdgeBoxEdges {
   if (typeof window === 'undefined') {
     const edges = { left: 0, right: 0, top: 0, bottom: 0 };
@@ -84,6 +86,20 @@ function calculateEdges(
     top = height !== undefined ? bottom - height : bottom;
   }
 
+  if (width !== undefined) {
+    const minLeft = safeZone;
+    const maxLeft = Math.max(minLeft, viewportWidth - safeZone - width);
+    left = Math.max(minLeft, Math.min(maxLeft, left));
+    right = left + width;
+  }
+
+  if (height !== undefined) {
+    const minTop = safeZone;
+    const maxTop = Math.max(minTop, viewportHeight - safeZone - height);
+    top = Math.max(minTop, Math.min(maxTop, top));
+    bottom = top + height;
+  }
+
   const edges = { left, right, top, bottom };
   return { ...edges, center: calculateCenter(edges) };
 }
@@ -105,7 +121,7 @@ export function useEdgeBoxPosition(options: UseEdgeBoxPositionOptions = {}): Use
   }, [paddingProp]);
 
   const [edges, setEdges] = useState<EdgeBoxEdges>(() =>
-    calculateEdges(position, width, height, paddingValues)
+    calculateEdges(position, width, height, paddingValues, safeZone)
   );
 
   const isManualPositionRef = useRef(false);
@@ -141,13 +157,13 @@ export function useEdgeBoxPosition(options: UseEdgeBoxPositionOptions = {}): Use
         }
 
         // If we can't determine a box size, fall back to the default positional calculation.
-        const next = calculateEdges(position, width, height, paddingValues);
+        const next = calculateEdges(position, width, height, paddingValues, safeZone);
         return next;
       });
       return;
     }
 
-    const newEdges = calculateEdges(position, width, height, paddingValues);
+    const newEdges = calculateEdges(position, width, height, paddingValues, safeZone);
     setEdges(newEdges);
   }, [position, width, height, paddingValues, safeZone]);
 
@@ -164,6 +180,11 @@ export function useEdgeBoxPosition(options: UseEdgeBoxPositionOptions = {}): Use
 
     isManualPositionRef.current = true;
   }, []);
+
+  const resetPosition = useCallback(() => {
+    isManualPositionRef.current = false;
+    setEdges(calculateEdges(position, width, height, paddingValues, safeZone));
+  }, [position, width, height, paddingValues, safeZone]);
 
   useEffect(() => {
     if (disableAutoRecalc) return;
@@ -185,5 +206,6 @@ export function useEdgeBoxPosition(options: UseEdgeBoxPositionOptions = {}): Use
     edges,
     recalculate,
     updateEdges,
+    resetPosition,
   };
 }
