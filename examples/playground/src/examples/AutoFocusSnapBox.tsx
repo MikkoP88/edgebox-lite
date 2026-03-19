@@ -1,15 +1,22 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import {
-  useEdgeBoxDrag,
-  useEdgeBoxPosition,
-  useEdgeBoxResize,
-  usePaddingValues,
+  useEdgeBox,
   type EdgeBoxAutoFocus,
   type ResizeDirection,
 } from "@edgebox-lite/react";
 
-function Handle({ dir, onStart }: { dir: ResizeDirection; onStart: (dir: ResizeDirection, e: React.MouseEvent) => void }) {
+function Handle({
+  dir,
+  getHandleProps,
+}: {
+  dir: ResizeDirection;
+  getHandleProps: (direction: ResizeDirection) => {
+    onMouseDown?: (e: React.MouseEvent) => void;
+    onTouchStart?: (e: React.TouchEvent) => void;
+  };
+}) {
   const size = 10;
+  const handleProps = getHandleProps(dir);
   const common: React.CSSProperties = {
     position: "absolute",
     width: size,
@@ -29,63 +36,47 @@ function Handle({ dir, onStart }: { dir: ResizeDirection; onStart: (dir: ResizeD
     sw: { bottom: -size / 2, left: -size / 2, cursor: "nesw-resize" },
   };
 
-  return <div style={{ ...common, ...pos[dir] }} onMouseDown={(e) => onStart(dir, e)} />;
+  return (
+    <div
+      style={{ ...common, ...pos[dir] }}
+      {...handleProps}
+    />
+  );
 }
 
 export function AutoFocusSnapBox() {
-  const boxRef = useRef<HTMLDivElement>(null);
-
-  const paddingValues = usePaddingValues(24);
-  const safeZone = 16;
-
   const [autoFocus, setAutoFocus] = useState<EdgeBoxAutoFocus>("corners");
-  const [committedSize, setCommittedSize] = useState({ width: 360, height: 220 });
+  const [lastSnap, setLastSnap] = useState("No snap commit yet");
 
-  const { edges, updateEdges } = useEdgeBoxPosition({
+  const {
+    ref,
+    style,
+    isDragging,
+    getDragProps,
+    getResizeHandleProps,
+  } = useEdgeBox({
     position: "top-center",
-    width: committedSize.width,
-    height: committedSize.height,
-    padding: paddingValues,
-    safeZone,
-  });
-
-  const { dragOffset, handleMouseDown, handleTouchStart, isDragging } = useEdgeBoxDrag({
-    edges,
-    updateEdges,
+    width: 360,
+    height: 220,
+    padding: 24,
+    safeZone: 16,
     commitToEdges: true,
-    elementRef: boxRef,
-    safeZone,
     autoFocus,
     autoFocusSensitivity: 8,
-  });
-
-  const { dimensions, resizeOffset, isResizing, handleResizeStart } = useEdgeBoxResize({
-    edges,
-    updateEdges,
-    commitToEdges: true,
-    onCommitSize: setCommittedSize,
-    baseOffset: dragOffset,
-    initialWidth: committedSize.width,
-    initialHeight: committedSize.height,
+    onDragEnd: (finalOffset) => {
+      setLastSnap(`Drag ended near ${Math.round(finalOffset.x)}, ${Math.round(finalOffset.y)}`);
+    },
     minWidth: 260,
     minHeight: 160,
-    safeZone,
-    autoFocus,
-    autoFocusSensitivity: 8,
+    onResizeEnd: (finalDimensions, finalOffset) => {
+      setLastSnap(
+        `Resize snapped to ${Math.round(finalDimensions.width)}×${Math.round(finalDimensions.height)} at ${Math.round(finalOffset.x)}, ${Math.round(finalOffset.y)}`
+      );
+    },
   });
 
-  const currentOffset = {
-    x: dragOffset.x + (isResizing ? resizeOffset.x : 0),
-    y: dragOffset.y + (isResizing ? resizeOffset.y : 0),
-  };
-
-  const style: React.CSSProperties = {
-    position: "fixed",
-    left: edges.left,
-    top: edges.top,
-    width: dimensions.width,
-    height: dimensions.height,
-    transform: `translate3d(${currentOffset.x}px, ${currentOffset.y}px, 0)`,
+  const snapBoxStyle: React.CSSProperties = {
+    ...style,
     background: "rgba(255,255,255,0.07)",
     border: "1px solid rgba(255,255,255,0.18)",
     borderRadius: 16,
@@ -108,19 +99,22 @@ export function AutoFocusSnapBox() {
               <option value="vertical">vertical</option>
               <option value="all">all</option>
               <option value="full">full</option>
+              <option value="1,2,10">1,2,10</option>
             </select>
           </label>
         </div>
         <div style={{ marginTop: 8, fontSize: 13, opacity: 0.9, lineHeight: 1.25 }}>
-          Drag/resize near a snap target, release, and EdgeBox will adjust the final committed edges.
+          Drag/resize near a snap target, release, and <code>useEdgeBox()</code> will commit the snapped result.
+        </div>
+        <div style={{ marginTop: 8, fontSize: 12, opacity: 0.8 }}>
+          Last snap: <code>{lastSnap}</code>
         </div>
       </div>
 
       <div
-        ref={boxRef}
-        style={style}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
+        ref={ref}
+        style={snapBoxStyle}
+        {...getDragProps()}
       >
         <div style={{ fontWeight: 600, marginBottom: 6 }}>Try snapping</div>
         <div style={{ fontSize: 13, opacity: 0.9 }}>
@@ -137,7 +131,7 @@ export function AutoFocusSnapBox() {
           "se",
           "sw",
         ] as const).map((dir) => (
-          <Handle key={dir} dir={dir} onStart={handleResizeStart} />
+          <Handle key={dir} dir={dir} getHandleProps={getResizeHandleProps} />
         ))}
       </div>
     </div>

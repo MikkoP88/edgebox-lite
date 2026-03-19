@@ -1,13 +1,18 @@
-import { useCallback, useEffect } from "react";
-import type { EdgeBoxEdges } from "./useEdgeBoxPosition";
-import { DEFAULT_SAFE_ZONE } from "./constants";
+import { useCallback, useEffect, type DependencyList, type RefObject } from "react";
+import type { EdgeBoxEdges } from "../edgeBoxEdges";
+import { DEFAULT_SAFE_ZONE } from "../internal/edgeBoxConstants";
+import { getViewportClampDelta } from "../internal/edgeBoxViewportBounds";
 
 export interface UseEdgeBoxViewportClampOptions {
-  elementRef: React.RefObject<HTMLElement>;
+  elementRef: RefObject<HTMLElement>;
   updateEdges: (edges: Partial<EdgeBoxEdges>) => void;
   safeZone?: number;
   disabled?: boolean;
-  deps?: readonly unknown[];
+  deps?: DependencyList;
+}
+
+export interface UseEdgeBoxViewportClampResult {
+  clampNow: () => void;
 }
 
 /**
@@ -22,7 +27,7 @@ export function useEdgeBoxViewportClamp({
   safeZone = DEFAULT_SAFE_ZONE,
   disabled = false,
   deps = [],
-}: UseEdgeBoxViewportClampOptions) {
+}: UseEdgeBoxViewportClampOptions): UseEdgeBoxViewportClampResult {
   const clampIntoViewport = useCallback(() => {
     if (disabled) return;
     if (typeof window === "undefined") return;
@@ -31,35 +36,12 @@ export function useEdgeBoxViewportClamp({
     if (!el) return;
 
     const rect = el.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    const minLeft = safeZone;
-    const minTop = safeZone;
-    const maxRight = viewportWidth - safeZone;
-    const maxBottom = viewportHeight - safeZone;
-
-    const availableWidth = maxRight - minLeft;
-    const availableHeight = maxBottom - minTop;
-
-    let dx = 0;
-    let dy = 0;
-
-    if (rect.width > availableWidth) {
-      dx = minLeft - rect.left;
-    } else if (rect.left < minLeft) {
-      dx = minLeft - rect.left;
-    } else if (rect.right > maxRight) {
-      dx = maxRight - rect.right;
-    }
-
-    if (rect.height > availableHeight) {
-      dy = minTop - rect.top;
-    } else if (rect.top < minTop) {
-      dy = minTop - rect.top;
-    } else if (rect.bottom > maxBottom) {
-      dy = maxBottom - rect.bottom;
-    }
+    const { x: dx, y: dy } = getViewportClampDelta(
+      rect,
+      safeZone,
+      window.innerWidth,
+      window.innerHeight,
+    );
 
     if (dx === 0 && dy === 0) return;
 
@@ -78,8 +60,7 @@ export function useEdgeBoxViewportClamp({
 
     const id = window.requestAnimationFrame(() => clampIntoViewport());
     return () => window.cancelAnimationFrame(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [disabled, clampIntoViewport, ...deps]);
+  }, [disabled, clampIntoViewport, deps]);
 
   // Clamp on intrinsic size changes (transitions, content updates, responsive changes).
   useEffect(() => {
@@ -98,4 +79,8 @@ export function useEdgeBoxViewportClamp({
     ro.observe(el);
     return () => ro.disconnect();
   }, [disabled, clampIntoViewport, elementRef]);
+
+  return {
+    clampNow: clampIntoViewport,
+  };
 }

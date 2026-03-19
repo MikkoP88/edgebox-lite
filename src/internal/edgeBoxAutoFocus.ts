@@ -1,4 +1,4 @@
-import type { EdgeBoxEdges } from "./useEdgeBoxPosition";
+import type { EdgeBoxEdges } from "../edgeBoxEdges";
 
 export type EdgeBoxAutoFocusPreset =
   | "unset"

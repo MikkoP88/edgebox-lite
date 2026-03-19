@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { EdgeBoxEdges } from "./useEdgeBoxPosition";
-import { applyEdgeBoxAutoFocus, type EdgeBoxAutoFocus } from "./autoFocus";
+import type { EdgeBoxEdges } from "../edgeBoxEdges";
+import { applyEdgeBoxAutoFocus, type EdgeBoxAutoFocus } from "../internal/edgeBoxAutoFocus";
 import {
   DEFAULT_AUTO_FOCUS,
   DEFAULT_AUTO_FOCUS_SENSITIVITY,
@@ -12,15 +12,16 @@ import {
   DEFAULT_MIN_HEIGHT,
   DEFAULT_VIEWPORT_FALLBACK_HEIGHT,
   DEFAULT_VIEWPORT_FALLBACK_WIDTH,
-} from "./constants";
+} from "../internal/edgeBoxConstants";
 import {
-  getFirstTouchInteractionPoint,
-  getMouseInteractionPoint,
+  clampClientPointToViewport,
+  getStartInteractionPoint,
   getTouchInteractionPointById,
-  isTouchStartEvent,
   MOUSE_EVENT_ID,
-} from "./interaction";
-import type { ResizeDirection, Dimensions, Position } from "./types";
+} from "../internal/edgeBoxInteraction";
+import type { ResizeDirection, Dimensions, Position } from "../edgeBoxTypes";
+import { useLatestRef } from "../internal/useLatestRef";
+import { clampDimensionsToViewport, clampTopLeftToViewport } from "../internal/edgeBoxViewportBounds";
 
 export interface UseEdgeBoxResizeOptions {
   edges: EdgeBoxEdges;
@@ -40,13 +41,17 @@ export interface UseEdgeBoxResizeOptions {
   onResizeEnd?: (finalDimensions: Dimensions, finalOffset: Position) => void;
 }
 
+export interface ResetSizeOptions {
+  commit?: boolean;
+}
+
 export interface UseEdgeBoxResizeResult {
   dimensions: Dimensions;
   resizeOffset: Position;
   isResizing: boolean;
   resizeDirection: ResizeDirection | null;
   handleResizeStart: (direction: ResizeDirection, e: React.MouseEvent | React.TouchEvent) => void;
-  resetDimensions: () => void;
+  resetSize: (options?: ResetSizeOptions) => void;
 }
 
 export function useEdgeBoxResize({
@@ -66,10 +71,7 @@ export function useEdgeBoxResize({
   autoFocusSensitivity = DEFAULT_AUTO_FOCUS_SENSITIVITY,
   onResizeEnd,
 }: UseEdgeBoxResizeOptions): UseEdgeBoxResizeResult {
-  const edgesRef = useRef(edges);
-  useEffect(() => {
-    edgesRef.current = edges;
-  }, [edges]);
+  const edgesRef = useLatestRef(edges);
 
   const [dimensions, setDimensions] = useState<Dimensions>({
     width: initialWidth,
@@ -86,22 +88,19 @@ export function useEdgeBoxResize({
   const startOffsetRef = useRef<Position>({ x: 0, y: 0 });
   const activeEventIdRef = useRef<number | null>(null);
 
-  const dimensionsRef = useRef<Dimensions>({ width: initialWidth, height: initialHeight });
-  const resizeOffsetRef = useRef<Position>({ x: 0, y: 0 });
-  const baseOffsetRef = useRef<Position>(baseOffset);
-
-  useEffect(() => {
-    dimensionsRef.current = dimensions;
-    resizeOffsetRef.current = resizeOffset;
-  }, [dimensions, resizeOffset]);
-
-  useEffect(() => {
-    baseOffsetRef.current = baseOffset;
-  }, [baseOffset]);
+  const dimensionsRef = useLatestRef(dimensions);
+  const resizeOffsetRef = useLatestRef(resizeOffset);
+  const baseOffsetRef = useLatestRef(baseOffset);
 
   useEffect(() => {
     if (isResizing) return;
-    setDimensions({ width: initialWidth, height: initialHeight });
+    setDimensions(prev => {
+      if (prev.width === initialWidth && prev.height === initialHeight) {
+        return prev;
+      }
+
+      return { width: initialWidth, height: initialHeight };
+    });
   }, [initialWidth, initialHeight, isResizing]);
 
   const applyResize = useCallback((dx: number, dy: number) => {
@@ -122,8 +121,9 @@ export function useEdgeBoxResize({
     const viewportHeight = window.innerHeight;
 
     const base = baseOffsetRef.current;
-    const startLeft = edges.left + base.x + startOffsetX;
-    const startTop = edges.top + base.y + startOffsetY;
+    const latestEdges = edgesRef.current;
+    const startLeft = latestEdges.left + base.x + startOffsetX;
+    const startTop = latestEdges.top + base.y + startOffsetY;
     const startRight = startLeft + startWidth;
     const startBottom = startTop + startHeight;
 
@@ -171,7 +171,7 @@ export function useEdgeBoxResize({
 
     setDimensions({ width: newWidth, height: newHeight });
     setResizeOffset({ x: newOffsetX, y: newOffsetY });
-  }, [resizeDirection, edges, minWidth, minHeight, maxWidth, maxHeight, safeZone]);
+  }, [resizeDirection, edgesRef, minWidth, minHeight, maxWidth, maxHeight, safeZone]);
 
   const handleResizeStart: UseEdgeBoxResizeResult["handleResizeStart"] = useCallback((
     direction: ResizeDirection,
@@ -182,14 +182,7 @@ export function useEdgeBoxResize({
 
     if (activeEventIdRef.current !== null) return;
 
-    let startPoint;
-
-    if (isTouchStartEvent(e)) {
-      startPoint = getFirstTouchInteractionPoint(e.changedTouches)
-        ?? getFirstTouchInteractionPoint(e.touches);
-    } else {
-      startPoint = getMouseInteractionPoint(e);
-    }
+    const startPoint = getStartInteractionPoint(e);
 
     if (!startPoint) return;
 
@@ -197,8 +190,7 @@ export function useEdgeBoxResize({
     setResizeDirection(direction);
     activeEventIdRef.current = startPoint.eventId;
 
-    const startX = Math.max(0, Math.min(window.innerWidth, startPoint.clientX));
-    const startY = Math.max(0, Math.min(window.innerHeight, startPoint.clientY));
+    const { x: startX, y: startY } = clampClientPointToViewport(startPoint.clientX, startPoint.clientY);
     resizeStartRef.current = { x: startX, y: startY };
     startDimensionsRef.current = { ...dimensions };
     startOffsetRef.current = { ...resizeOffset };
@@ -260,10 +252,68 @@ export function useEdgeBoxResize({
     }
   }, [autoFocus, autoFocusSensitivity, commitToEdges, onCommitSize, onResizeEnd, safeZone, updateEdges]);
 
-  const resetDimensions = useCallback(() => {
-    setDimensions({ width: initialWidth, height: initialHeight });
+  const resetSize = useCallback((options?: ResetSizeOptions) => {
+    const commit = options?.commit ?? false;
+
+    const requestedDimensions = {
+      width: initialWidth,
+      height: initialHeight,
+    };
+
+    const finalDimensions = typeof window !== 'undefined'
+      ? clampDimensionsToViewport(requestedDimensions, {
+          minWidth,
+          minHeight,
+          maxWidth,
+          maxHeight,
+          safeZone,
+          viewportWidth: window.innerWidth,
+          viewportHeight: window.innerHeight,
+        })
+      : { ...requestedDimensions };
+
+    activeEventIdRef.current = null;
+    setIsResizing(false);
+    setResizeDirection(null);
+
+    dimensionsRef.current = finalDimensions;
+    resizeOffsetRef.current = { x: 0, y: 0 };
+    startDimensionsRef.current = finalDimensions;
+    startOffsetRef.current = { x: 0, y: 0 };
+
+    setDimensions(finalDimensions);
     setResizeOffset({ x: 0, y: 0 });
-  }, [initialWidth, initialHeight]);
+
+    if (commit) {
+      onCommitSize?.(finalDimensions);
+
+      if (updateEdges) {
+        const baseEdges = edgesRef.current;
+        let left = baseEdges.left;
+        let top = baseEdges.top;
+
+        if (typeof window !== 'undefined') {
+          const clampedPosition = clampTopLeftToViewport(
+            left,
+            top,
+            finalDimensions,
+            safeZone,
+            window.innerWidth,
+            window.innerHeight,
+          );
+          left = clampedPosition.x;
+          top = clampedPosition.y;
+        }
+
+        updateEdges({
+          left,
+          top,
+          right: left + finalDimensions.width,
+          bottom: top + finalDimensions.height,
+        });
+      }
+    }
+  }, [initialWidth, initialHeight, maxHeight, maxWidth, minHeight, minWidth, onCommitSize, safeZone, updateEdges]);
 
   useEffect(() => {
     if (!isResizing) return;
@@ -271,8 +321,7 @@ export function useEdgeBoxResize({
     const handleMouseMove = (e: MouseEvent) => {
       if (activeEventIdRef.current !== MOUSE_EVENT_ID) return;
 
-      const clientX = Math.max(0, Math.min(window.innerWidth, e.clientX));
-      const clientY = Math.max(0, Math.min(window.innerHeight, e.clientY));
+      const { x: clientX, y: clientY } = clampClientPointToViewport(e.clientX, e.clientY);
 
       const dx = clientX - resizeStartRef.current.x;
       const dy = clientY - resizeStartRef.current.y;
@@ -294,8 +343,7 @@ export function useEdgeBoxResize({
 
       e.preventDefault();
 
-      const clientX = Math.max(0, Math.min(window.innerWidth, touch.clientX));
-      const clientY = Math.max(0, Math.min(window.innerHeight, touch.clientY));
+      const { x: clientX, y: clientY } = clampClientPointToViewport(touch.clientX, touch.clientY);
 
       const dx = clientX - resizeStartRef.current.x;
       const dy = clientY - resizeStartRef.current.y;
@@ -333,6 +381,6 @@ export function useEdgeBoxResize({
     isResizing,
     resizeDirection,
     handleResizeStart,
-    resetDimensions,
+    resetSize,
   };
 }

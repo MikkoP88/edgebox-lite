@@ -5,6 +5,10 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@edgebox-lite/react": ["../../src/index.ts"]
+    },
 
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,

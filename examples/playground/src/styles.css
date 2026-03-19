@@ -41,6 +41,17 @@ button, select {
   border-radius: 10px;
 }
 
+select {
+  background: #182039;
+  color: #e8ecff;
+}
+
+select option,
+select optgroup {
+  background: #182039;
+  color: #e8ecff;
+}
+
 button:hover {
   background: rgba(255, 255, 255, 0.12);
 }
@@ -48,4 +59,21 @@ button:hover {
 .exampleHostHint {
   opacity: 0.8;
   font-size: 14px;
+}
+
+.featureList {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.featurePill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  opacity: 0.95;
 }

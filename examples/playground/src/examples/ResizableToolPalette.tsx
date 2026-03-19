@@ -1,13 +1,21 @@
 import { useState } from "react";
 import {
-  useEdgeBoxPosition,
-  useEdgeBoxResize,
-  usePaddingValues,
+  useEdgeBox,
   type ResizeDirection,
 } from "@edgebox-lite/react";
 
-function Handle({ dir, onStart }: { dir: ResizeDirection; onStart: (dir: ResizeDirection, e: React.MouseEvent) => void }) {
+function Handle({
+  dir,
+  getHandleProps,
+}: {
+  dir: ResizeDirection;
+  getHandleProps: (direction: ResizeDirection) => {
+    onMouseDown?: (e: React.MouseEvent) => void;
+    onTouchStart?: (e: React.TouchEvent) => void;
+  };
+}) {
   const size = 10;
+  const handleProps = getHandleProps(dir);
   const common: React.CSSProperties = {
     position: "absolute",
     width: size,
@@ -32,44 +40,43 @@ function Handle({ dir, onStart }: { dir: ResizeDirection; onStart: (dir: ResizeD
       role="button"
       aria-label={`Resize ${dir}`}
       style={{ ...common, ...pos[dir] }}
-      onMouseDown={(e) => onStart(dir, e)}
+      {...handleProps}
     />
   );
 }
 
 export function ResizableToolPalette() {
-  const paddingValues = usePaddingValues(24);
-  const safeZone = 16;
-
   const [committedSize, setCommittedSize] = useState({ width: 360, height: 220 });
+  const [lastResize, setLastResize] = useState("No committed resize yet");
 
-  const { edges, updateEdges } = useEdgeBoxPosition({
+  const {
+    style,
+    dimensions,
+    isResizing,
+    resetSize,
+    getResizeHandleProps,
+  } = useEdgeBox({
     position: "top-left",
     width: committedSize.width,
     height: committedSize.height,
-    padding: paddingValues,
-    safeZone,
-  });
-
-  const { dimensions, resizeOffset, isResizing, handleResizeStart } = useEdgeBoxResize({
-    edges,
-    updateEdges,
+    padding: 24,
+    safeZone: 16,
+    draggable: false,
     commitToEdges: true,
     onCommitSize: setCommittedSize,
-    initialWidth: committedSize.width,
-    initialHeight: committedSize.height,
     minWidth: 260,
     minHeight: 160,
-    safeZone,
+    maxWidth: 520,
+    maxHeight: 360,
+    onResizeEnd: (finalDimensions, finalOffset) => {
+      setLastResize(
+        `${Math.round(finalDimensions.width)}×${Math.round(finalDimensions.height)} at ${Math.round(finalOffset.x)}, ${Math.round(finalOffset.y)}`
+      );
+    },
   });
 
-  const style: React.CSSProperties = {
-    position: "fixed",
-    left: edges.left,
-    top: edges.top,
-    width: dimensions.width,
-    height: dimensions.height,
-    transform: `translate3d(${resizeOffset.x}px, ${resizeOffset.y}px, 0)`,
+  const paletteStyle: React.CSSProperties = {
+    ...style,
     background: "rgba(255,255,255,0.08)",
     border: "1px solid rgba(255,255,255,0.18)",
     borderRadius: 16,
@@ -79,11 +86,28 @@ export function ResizableToolPalette() {
   };
 
   return (
-    <div style={style}>
+    <div style={paletteStyle}>
       <strong>ResizableToolPalette</strong>
       <p style={{ margin: "10px 0 0", opacity: 0.9, lineHeight: 1.25 }}>
-        Drag the white dots to resize (8 directions). Size commits on mouse up.
+        Resize from any handle with mouse or touch. This demo now uses <code>useEdgeBox()</code> for committed resize, constraints, and reset flows.
       </p>
+
+      <div style={{ marginTop: 12, fontSize: 13, lineHeight: 1.35, opacity: 0.92 }}>
+        <div>
+          Size: <code>{Math.round(dimensions.width)}×{Math.round(dimensions.height)}</code>
+        </div>
+        <div>
+          Last commit: <code>{lastResize}</code>
+        </div>
+        <div>
+          Constraints: <code>260×160</code> min, <code>520×360</code> max
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+        <button onClick={() => resetSize({ commit: true })}>Reset size</button>
+        <button onClick={() => setCommittedSize({ width: 420, height: 280 })}>Preset 420×280</button>
+      </div>
 
       {([
         "n",
@@ -95,7 +119,7 @@ export function ResizableToolPalette() {
         "se",
         "sw",
       ] as const).map((dir) => (
-        <Handle key={dir} dir={dir} onStart={handleResizeStart} />
+        <Handle key={dir} dir={dir} getHandleProps={getResizeHandleProps} />
       ))}
     </div>
   );

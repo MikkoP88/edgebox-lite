@@ -1,26 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import {
   useEdgeBoxDrag,
+  useEdgeBoxTransform,
   useEdgeBoxPosition,
   useEdgeBoxViewportClamp,
-  usePaddingValues,
+  useEdgeBoxPaddingValues,
 } from "@edgebox-lite/react";
 
 export function AutoSizedQuickMenu() {
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const paddingValues = usePaddingValues({ all: 24, right: 32 });
+  const paddingValues = useEdgeBoxPaddingValues({ all: 24, right: 32 });
   const safeZone = 16;
 
   const [open, setOpen] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => setIsHydrated(true), []);
 
   // When closed, we leave width/height as `undefined` (auto-size).
   // When opened, we provide explicit dimensions so clamping math is stable.
-  const numericWidth = open ? 320 : undefined;
-  const numericHeight = open ? 260 : undefined;
+  const numericWidth = open ? (showDetails ? 360 : 320) : undefined;
+  const numericHeight = open ? (showDetails ? 340 : 260) : undefined;
 
   const { edges, updateEdges } = useEdgeBoxPosition({
     position: "top-right",
@@ -40,19 +42,21 @@ export function AutoSizedQuickMenu() {
 
   // Keep the menu inside the viewport when its intrinsic size changes.
   // Typical use-case: a submenu opens/closes or content loads.
-  useEdgeBoxViewportClamp({
+  const { clampNow } = useEdgeBoxViewportClamp({
     elementRef: menuRef,
     updateEdges,
     safeZone,
     disabled: !isHydrated || isDragging || isPendingDrag,
-    deps: [open],
+    deps: [open, showDetails],
   });
+
+  const { transform } = useEdgeBoxTransform({ dragOffset });
 
   const style: React.CSSProperties = {
     position: "fixed",
     left: edges.left,
     top: edges.top,
-    transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)`,
+    transform,
     background: "rgba(255,255,255,0.06)",
     border: "1px solid rgba(255,255,255,0.16)",
     borderRadius: 16,
@@ -73,10 +77,15 @@ export function AutoSizedQuickMenu() {
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <strong style={{ flex: 1 }}>AutoSizedQuickMenu</strong>
         <button onClick={() => setOpen((v) => !v)}>{open ? "Close" : "Open"}</button>
+        <button onClick={() => setShowDetails((value) => !value)} disabled={!open}>
+          {showDetails ? "Compact" : "Details"}
+        </button>
+        <button onClick={() => clampNow()}>Clamp now</button>
       </div>
 
       <div style={{ marginTop: 10, fontSize: 13, opacity: 0.9, lineHeight: 1.25 }}>
-        Drag me. Toggle open/close. When size changes, <code>useEdgeBoxViewportClamp</code> keeps me inside the viewport.
+        Drag me. Toggle open/close and detail density. When the intrinsic DOM size changes,
+        <code> useEdgeBoxViewportClamp </code> keeps the box in view.
       </div>
 
       {open ? (
@@ -87,6 +96,19 @@ export function AutoSizedQuickMenu() {
           <div style={{ opacity: 0.8, fontSize: 12 }}>
             This content changes the menu&apos;s size.
           </div>
+          {showDetails ? (
+            <>
+              <div style={{ opacity: 0.92, fontSize: 12, lineHeight: 1.35 }}>
+                Detail mode adds more intrinsic content and a wider/taller measured box.
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8 }}>
+                <button>Pin</button>
+                <button>Duplicate</button>
+                <button>Detach</button>
+                <button>Inspect</button>
+              </div>
+            </>
+          ) : null}
         </div>
       ) : null}
     </div>

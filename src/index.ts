@@ -7,21 +7,74 @@
  * type/name collisions (e.g. multiple `Position`/`Dimensions` types).
  */
 
-export { usePaddingValues } from "./padding";
-export type { PaddingValue, PaddingValues } from "./padding";
+export { resolveEdgeBoxPaddingValues, useEdgeBoxPaddingValues } from "./hooks/useEdgeBoxPaddingValues";
+export type { PaddingValue, PaddingValues } from "./hooks/useEdgeBoxPaddingValues";
 
-export { useCssEdgePosition } from "./cssEdgePosition";
-export type { CssEdgePosition, EdgePosition, UseCssEdgePositionResult } from "./cssEdgePosition";
+export { useEdgeBoxCssPosition } from "./hooks/useEdgeBoxCssPosition";
+export type {
+  CssEdgePosition,
+  EdgePosition,
+  UseEdgeBoxCssPositionResult,
+} from "./hooks/useEdgeBoxCssPosition";
 
-export type { ResizeDirection } from "./types";
+export type { ResizeDirection } from "./edgeBoxTypes";
 
-export { useEdgeBoxPosition } from "./useEdgeBoxPosition";
-export type { EdgeBoxEdges } from "./useEdgeBoxPosition";
+export {
+  alignRect,
+  clampRectToViewport,
+  edgesToOffsetRect,
+  edgesToRect,
+  rectToEdges,
+} from "./edgeBoxRect";
+export type { EdgeBoxLayoutRect } from "./edgeBoxRect";
 
-export type { EdgeBoxAutoFocus } from "./autoFocus";
+export { useEdgeBox } from "./hooks/useEdgeBox";
+export type {
+  UseEdgeBoxOptions,
+  UseEdgeBoxResult,
+  UseEdgeBoxDragProps,
+  UseEdgeBoxResizeHandleProps,
+} from "./hooks/useEdgeBox";
 
-export { useEdgeBoxDrag } from "./useEdgeBoxDrag";
+export { useEdgeBoxPosition } from "./hooks/useEdgeBoxPosition";
+export type {
+  EdgeBoxEdges,
+  UseEdgeBoxPositionOptions,
+  UseEdgeBoxPositionResult,
+} from "./hooks/useEdgeBoxPosition";
 
-export { useEdgeBoxResize } from "./useEdgeBoxResize";
+export type { EdgeBoxAutoFocus } from "./internal/edgeBoxAutoFocus";
 
-export { useEdgeBoxViewportClamp } from "./useEdgeBoxViewportClamp";
+export { useEdgeBoxDrag } from "./hooks/useEdgeBoxDrag";
+export type { UseEdgeBoxDragOptions, UseEdgeBoxDragResult } from "./hooks/useEdgeBoxDrag";
+
+export { useEdgeBoxResize } from "./hooks/useEdgeBoxResize";
+export type {
+  ResetSizeOptions,
+  UseEdgeBoxResizeOptions,
+  UseEdgeBoxResizeResult,
+} from "./hooks/useEdgeBoxResize";
+
+export { useEdgeBoxTransform } from "./hooks/useEdgeBoxTransform";
+export type { UseEdgeBoxTransformOptions, UseEdgeBoxTransformResult } from "./hooks/useEdgeBoxTransform";
+
+export { useEdgeBoxMeasuredSize } from "./hooks/useEdgeBoxMeasuredSize";
+export type { UseEdgeBoxMeasuredSizeOptions } from "./hooks/useEdgeBoxMeasuredSize";
+
+export { useEdgeBoxViewportSize } from "./hooks/useEdgeBoxViewportSize";
+export type {
+  UseEdgeBoxViewportSizeOptions,
+  UseEdgeBoxViewportSizeResult,
+} from "./hooks/useEdgeBoxViewportSize";
+
+export { useEdgeBoxLinkedBoxes } from "./hooks/useEdgeBoxLinkedBoxes";
+export type {
+  UseEdgeBoxLinkedBoxesOptions,
+  UseEdgeBoxLinkedBoxesResult,
+} from "./hooks/useEdgeBoxLinkedBoxes";
+
+export { useEdgeBoxViewportClamp } from "./hooks/useEdgeBoxViewportClamp";
+export type {
+  UseEdgeBoxViewportClampOptions,
+  UseEdgeBoxViewportClampResult,
+} from "./hooks/useEdgeBoxViewportClamp";

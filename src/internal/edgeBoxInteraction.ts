@@ -24,6 +24,28 @@ export function isTouchStartEvent(
   return "changedTouches" in e;
 }
 
+export function getStartInteractionPoint(
+  e: React.MouseEvent | React.TouchEvent
+): InteractionPoint | null {
+  if (isTouchStartEvent(e)) {
+    return getFirstTouchInteractionPoint(e.changedTouches)
+      ?? getFirstTouchInteractionPoint(e.touches);
+  }
+
+  return getMouseInteractionPoint(e);
+}
+
+export function clampClientPointToViewport(clientX: number, clientY: number) {
+  if (typeof window === "undefined") {
+    return { x: clientX, y: clientY };
+  }
+
+  return {
+    x: Math.max(0, Math.min(window.innerWidth, clientX)),
+    y: Math.max(0, Math.min(window.innerHeight, clientY)),
+  };
+}
+
 export function getMouseInteractionPoint(e: React.MouseEvent): InteractionPoint {
   return {
     clientX: e.clientX,

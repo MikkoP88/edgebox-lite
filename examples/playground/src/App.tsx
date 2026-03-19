@@ -4,19 +4,85 @@ import { ResizableToolPalette } from "./examples/ResizableToolPalette";
 import { DragResizeWindow } from "./examples/DragResizeWindow";
 import { AutoSizedQuickMenu } from "./examples/AutoSizedQuickMenu";
 import { AutoFocusSnapBox } from "./examples/AutoFocusSnapBox";
+import { AnchoredCssPositionShowcase } from "./examples/AnchoredCssPositionShowcase";
+import { LayoutHelpersShowcase } from "./examples/LayoutHelpersShowcase";
+import { LinkedBoxesShowcase } from "./examples/LinkedBoxesShowcase";
+import { SimplePositionBox } from "./examples/SimplePositionBox";
+import { SimpleDraggableBox } from "./examples/SimpleDraggableBox";
+import { SimpleResizableBox } from "./examples/SimpleResizableBox";
 
 type ExampleId =
+  | "simple-position"
+  | "simple-drag"
+  | "simple-resize"
   | "draggable"
   | "resizable"
   | "drag-resize"
   | "auto-size-clamp"
-  | "autofocus";
+  | "autofocus"
+  | "css-position"
+  | "layout-helpers"
+  | "linked-boxes";
+
+const exampleMeta: Record<ExampleId, { label: string; features: string[] }> = {
+  "simple-position": {
+    label: "Simple anchored box",
+    features: ["useEdgeBox", "updateEdges", "resetPosition"],
+  },
+  "simple-drag": {
+    label: "Simple draggable box",
+    features: ["useEdgeBox", "commitToEdges", "getDragProps()"],
+  },
+  "simple-resize": {
+    label: "Simple resizable box",
+    features: ["useEdgeBox", "single resize handle", "getResizeHandleProps()"],
+  },
+  "drag-resize": {
+    label: "Drag + resize window",
+    features: ["useEdgeBox", "resetPosition", "resetSize", "recalculate", "autoFocus"],
+  },
+  draggable: {
+    label: "Draggable sticky note",
+    features: ["useEdgeBox", "commitToEdges: false", "resetDragOffset", "baseTransform", "onDragEnd"],
+  },
+  resizable: {
+    label: "Resizable tool palette",
+    features: ["useEdgeBox", "touch resize", "min/max constraints", "resetSize({ commit: true })"],
+  },
+  "auto-size-clamp": {
+    label: "Auto-sized quick menu + clamp",
+    features: ["ResizeObserver clamp", "deps re-clamp", "manual clampNow()", "auto-sized DOM"],
+  },
+  autofocus: {
+    label: "Auto focus snapping",
+    features: ["useEdgeBox", "drag snapping", "resize snapping", "preset string areas"],
+  },
+  "css-position": {
+    label: "CSS edge positioning",
+    features: ["useEdgeBoxCssPosition", "fixed edge styles", "center anchor transform"],
+  },
+  "layout-helpers": {
+    label: "Layout + rect helpers",
+    features: ["alignRect", "rectToEdges", "edgesToRect", "clampRectToViewport", "resolveEdgeBoxPaddingValues"],
+  },
+  "linked-boxes": {
+    label: "Linked boxes + measurement",
+    features: ["useEdgeBoxLinkedBoxes", "useEdgeBoxMeasuredSize", "useEdgeBoxViewportSize", "linked overlay"],
+  },
+};
 
 export function App() {
-  const [example, setExample] = useState<ExampleId>("drag-resize");
+  const [example, setExample] = useState<ExampleId>("simple-drag");
+  const selectedMeta = exampleMeta[example];
 
   const exampleElement = (() => {
     switch (example) {
+      case "simple-position":
+        return <SimplePositionBox />;
+      case "simple-drag":
+        return <SimpleDraggableBox />;
+      case "simple-resize":
+        return <SimpleResizableBox />;
       case "draggable":
         return <DraggableStickyNote />;
       case "resizable":
@@ -27,6 +93,12 @@ export function App() {
         return <AutoSizedQuickMenu />;
       case "autofocus":
         return <AutoFocusSnapBox />;
+      case "css-position":
+        return <AnchoredCssPositionShowcase />;
+      case "layout-helpers":
+        return <LayoutHelpersShowcase />;
+      case "linked-boxes":
+        return <LinkedBoxesShowcase />;
     }
   })();
 
@@ -39,18 +111,35 @@ export function App() {
           <label>
             Example:{" "}
             <select value={example} onChange={(e) => setExample(e.target.value as ExampleId)}>
-              <option value="drag-resize">Drag + resize window</option>
-              <option value="draggable">Draggable sticky note</option>
-              <option value="resizable">Resizable tool palette</option>
-              <option value="auto-size-clamp">Auto-sized quick menu + clamp</option>
-              <option value="autofocus">Auto focus snapping</option>
+              <optgroup label="Simple examples">
+                <option value="simple-position">{exampleMeta["simple-position"].label}</option>
+                <option value="simple-drag">{exampleMeta["simple-drag"].label}</option>
+                <option value="simple-resize">{exampleMeta["simple-resize"].label}</option>
+              </optgroup>
+              <optgroup label="Feature demos">
+                <option value="drag-resize">{exampleMeta["drag-resize"].label}</option>
+                <option value="draggable">{exampleMeta.draggable.label}</option>
+                <option value="resizable">{exampleMeta.resizable.label}</option>
+                <option value="autofocus">{exampleMeta.autofocus.label}</option>
+              </optgroup>
+              <optgroup label="Advanced examples">
+                <option value="auto-size-clamp">{exampleMeta["auto-size-clamp"].label}</option>
+                <option value="css-position">{exampleMeta["css-position"].label}</option>
+                <option value="layout-helpers">{exampleMeta["layout-helpers"].label}</option>
+                <option value="linked-boxes">{exampleMeta["linked-boxes"].label}</option>
+              </optgroup>
             </select>
           </label>
         </div>
         <p className="exampleHostHint">
-          These demos render a <code>position: fixed</code> element that you can drag/resize.
-          Try resizing the browser window to see clamping/recalc behavior.
+          Start with the simple examples for minimal hook usage, then switch to the feature demos
+          for reset flows, snapping, viewport clamp, geometry helpers, linked boxes, and low-level CSS positioning.
         </p>
+        <div className="featureList">
+          {selectedMeta.features.map((feature) => (
+            <span key={feature} className="featurePill">{feature}</span>
+          ))}
+        </div>
       </div>
 
       {exampleElement}
