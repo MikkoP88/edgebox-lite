@@ -27,6 +27,7 @@ import {
 } from "../internal/edgeBoxConstants";
 
 export interface UseEdgeBoxOptions {
+  elementRef?: React.RefObject<HTMLElement>;
   position?: EdgePosition;
   width?: number;
   height?: number;
@@ -90,6 +91,7 @@ export interface UseEdgeBoxResult {
 }
 
 export function useEdgeBox({
+  elementRef,
   position = DEFAULT_EDGE_POSITION,
   width,
   height,
@@ -115,7 +117,8 @@ export function useEdgeBox({
   onDragEnd,
   onResizeEnd,
 }: UseEdgeBoxOptions = {}): UseEdgeBoxResult {
-  const ref = useRef<HTMLDivElement>(null);
+  const internalRef = useRef<HTMLDivElement>(null);
+  const ref = (elementRef ?? internalRef) as React.RefObject<HTMLDivElement>;
   const paddingValues = useEdgeBoxPaddingValues(padding);
 
   const resolvedInitialWidth = width ?? initialWidth ?? DEFAULT_RESIZE_INITIAL_WIDTH;

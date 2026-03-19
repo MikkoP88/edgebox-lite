@@ -19,6 +19,15 @@ export type {
 
 export type { ResizeDirection } from "./edgeBoxTypes";
 
+export {
+  alignRect,
+  clampRectToViewport,
+  edgesToOffsetRect,
+  edgesToRect,
+  rectToEdges,
+} from "./edgeBoxRect";
+export type { EdgeBoxLayoutRect } from "./edgeBoxRect";
+
 export { useEdgeBox } from "./hooks/useEdgeBox";
 export type {
   UseEdgeBoxOptions,
@@ -48,6 +57,21 @@ export type {
 
 export { useEdgeBoxTransform } from "./hooks/useEdgeBoxTransform";
 export type { UseEdgeBoxTransformOptions, UseEdgeBoxTransformResult } from "./hooks/useEdgeBoxTransform";
+
+export { useEdgeBoxMeasuredSize } from "./hooks/useEdgeBoxMeasuredSize";
+export type { UseEdgeBoxMeasuredSizeOptions } from "./hooks/useEdgeBoxMeasuredSize";
+
+export { useEdgeBoxViewportSize } from "./hooks/useEdgeBoxViewportSize";
+export type {
+  UseEdgeBoxViewportSizeOptions,
+  UseEdgeBoxViewportSizeResult,
+} from "./hooks/useEdgeBoxViewportSize";
+
+export { useEdgeBoxLinkedBoxes } from "./hooks/useEdgeBoxLinkedBoxes";
+export type {
+  UseEdgeBoxLinkedBoxesOptions,
+  UseEdgeBoxLinkedBoxesResult,
+} from "./hooks/useEdgeBoxLinkedBoxes";
 
 export { useEdgeBoxViewportClamp } from "./hooks/useEdgeBoxViewportClamp";
 export type {
