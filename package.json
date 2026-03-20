@@ -1,6 +1,6 @@
 {
   "name": "@edgebox-lite/react",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Edge-based draggable/resizable floating UI hooks for React.",
   "license": "MIT",
   "type": "module",
