@@ -79,10 +79,10 @@ export function SimpleResizableBox() {
           key={handle.direction}
           style={{
             position: "absolute",
-            background: "#ffffff",
-            border: "1px solid #0b1020",
+            background: "transparent",
+            border: "none",
             borderRadius: handle.direction.length === 1 ? 10 : 999,
-            boxShadow: "0 6px 16px #000000",
+            boxShadow: "none",
             ...handle.style,
           }}
           {...getResizeHandleProps(handle.direction)}
